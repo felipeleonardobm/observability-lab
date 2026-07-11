@@ -1,0 +1,39 @@
+services:
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    volumes:
+      - ./gateway:/var/www
+    ports:
+      - "8000:8000"
+    depends_on:
+      - gateway-db
+
+  gateway-db:
+    image: mysql:8.4
+    container_name: gateway-db
+    environment:
+      MYSQL_DATABASE: gateway
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "33061:3306"
+
+  payment:
+    build: ./payment-service
+    container_name: payment
+    volumes:
+      - ./payment-service:/var/www
+    ports:
+      - "8001:8000"
+    depends_on:
+      - payment-db
+
+  payment-db:
+    image: mysql:8.4
+    container_name: payment-db
+    environment:
+      MYSQL_DATABASE: payment
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "33062:3306"
