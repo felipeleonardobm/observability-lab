@@ -42,6 +42,6 @@ RUN chown -R laravel:laravel /var/www
 
 USER laravel
 
-EXPOSE 9000
+EXPOSE 8000
 
-CMD ["php-fpm"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
