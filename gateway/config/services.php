@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'payment' => [
+        'base_url' => env('PAYMENT_BASE_URL'),
+        'auth' => env('PAYMENT_AUTH')
+    ]
+
 ];

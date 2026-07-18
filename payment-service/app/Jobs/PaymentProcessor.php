@@ -26,6 +26,11 @@ class PaymentProcessor implements ShouldQueue
     public function handle(): void
     {
         try {
+            Log::info('Starting to process payment.', [
+                'payment_id' => $this->payment->id,
+                'status' => $this->payment->status,
+            ]);
+
             $this->payment->update([
                 'status' => PaymentStatusEnum::PROCESSING
             ]);
