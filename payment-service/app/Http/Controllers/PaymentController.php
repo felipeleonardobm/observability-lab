@@ -5,20 +5,25 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePaymentRequest;
 use App\Jobs\PaymentProcessor;
 use App\Models\Payment;
+use App\Telemetry\Telemetry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-    public function __construct() {}
+    public function __construct(
+        private Telemetry $telemetry,
+    ) {}
     /**
      * Display a listing of the resource.
      */
     public function index(int $id)
     {
-        return response()->json([
-            'payment' => Payment::find($id)
-        ], 200);
+        $this->telemetry->span('Get payment', function () use ($id) {
+            return response()->json([
+                'payment' => Payment::find($id)
+            ], 200);
+        });
     }
 
     /**
@@ -26,22 +31,24 @@ class PaymentController extends Controller
      */
     public function store(StorePaymentRequest $request)
     {
-        $validated = $request->validated();
-
-        $payment = Payment::create([
-            'user_id' => $validated['user_id'],
-            'amount' => $validated['amount'],
-            'currency' => $validated['currency'],
-        ]);
-
-        Log::info('Inserted new payment.', [
-            'payment_id' => $payment->id,
-            'status' => $payment->status,
-        ]);
-
-        PaymentProcessor::dispatch($payment);
-
-        return response()->json($payment, 201);
+        $this->telemetry->span('Create payment', function () use ($request) {
+            $validated = $request->validated();
+    
+            $payment = Payment::create([
+                'user_id' => $validated['user_id'],
+                'amount' => $validated['amount'],
+                'currency' => $validated['currency'],
+            ]);
+    
+            Log::info('Inserted new payment.', [
+                'payment_id' => $payment->id,
+                'status' => $payment->status,
+            ]);
+    
+            PaymentProcessor::dispatch($payment);
+    
+            return response()->json($payment, 201);
+        });
     }
 
     /**
