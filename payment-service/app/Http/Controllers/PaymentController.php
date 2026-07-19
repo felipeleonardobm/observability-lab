@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
+    public function __construct() {}
     /**
      * Display a listing of the resource.
      */

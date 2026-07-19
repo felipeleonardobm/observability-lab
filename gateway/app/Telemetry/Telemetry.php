@@ -3,6 +3,7 @@
 namespace App\Telemetry;
 
 use Closure;
+use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\API\Trace\TracerInterface;
 use Throwable;
 
@@ -28,17 +29,17 @@ class Telemetry
             ->spanBuilder($name)
             ->startSpan();
 
-        $scope = $span->activate();
-
         foreach ($attributes as $key => $attribute) {
             $span->setAttribute($key, $attribute);
         }
+
+        $scope = $span->activate();
 
         try {
             return $callback();
         } catch (Throwable $e) {
             $span->recordException($e);
-            $span->setStatus("ERROR");
+            $span->setStatus(StatusCode::STATUS_ERROR);
 
             throw $e;
         } finally {

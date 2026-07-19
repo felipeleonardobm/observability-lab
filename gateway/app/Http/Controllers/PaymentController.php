@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Clients\PaymentClient;
+use App\Telemetry\Telemetry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
     public function __construct(
-        private PaymentClient $paymentClient
+        private PaymentClient $paymentClient,
+        private Telemetry $telemetry,
     ) {}
 
     /**
@@ -25,11 +27,13 @@ class PaymentController extends Controller
      */
     public function store(Request $request)
     {
-        return response()->json($this->paymentClient->post('api/payments', [
-            'user_id' => $request->user()->id,
-            'amount' => $request->input('amount'),
-            'currency' => $request->input('currency'),
-        ]));
+        $this->telemetry->span('Create payment', function () use ($request) {
+            return response()->json($this->paymentClient->post('api/payments', [
+                'user_id' => $request->user()->id,
+                'amount' => $request->input('amount'),
+                'currency' => $request->input('currency'),
+            ]));
+        });
     }
 
     /**

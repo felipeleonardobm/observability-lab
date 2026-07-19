@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Telemetry\Telemetry;
 use Illuminate\Support\ServiceProvider;
 use OpenTelemetry\API\Trace\TracerInterface;
+use OpenTelemetry\Contrib\Otlp\SpanExporterFactory;
+use OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor;
 use OpenTelemetry\SDK\Trace\TracerProvider;
 
 class TelemetryServiceProvider extends ServiceProvider
@@ -13,15 +16,22 @@ class TelemetryServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(TracerInterface::class, function () {
+        $this->app->singleton(TracerProvider::class, function () {
+            $exporter = (new SpanExporterFactory())->create();
+            $processor = new SimpleSpanProcessor($exporter);
+            return new TracerProvider($processor);
+        });
 
-        $tracerProvider = new TracerProvider();
+        $this->app->singleton(TracerInterface::class, function ($app) {
+            $tracerProvider = $app->make(TracerProvider::class);
 
-        return $tracerProvider->getTracer(
-            'gateway',
-            '1.0.0'
-        );
-    });
+            return $tracerProvider->getTracer(
+                config('otel.service_name'),
+                config('otel.version'),
+            );
+        });
+
+        $this->app->singleton(Telemetry::class);
     }
 
     /**
